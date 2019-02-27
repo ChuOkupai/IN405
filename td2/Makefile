@@ -3,7 +3,7 @@ CFLAGS=
 LDFLAGS=-L. -lsef
 
 clean:
-	rm -f *.out
+	rm -f *.out *.o
 
 se_fichier.o: se_fichier.c se_fichier.h
 	$(CC) $(CFLAGS) -c -fPIC $< -o $@
