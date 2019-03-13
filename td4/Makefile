@@ -4,11 +4,20 @@ CFLAGS=-O3 -Wall -Werror -Wextra
 clean:
 	rm -f *.out
 
-ex1.out: ex1.c
+ex%.out: ex%.c
 	$(CC) $(CFLAGS) $< -o $@
 
-ex2.out: ex2.c
-	$(CC) $(CFLAGS) $< -o $@
+ex1: ex1.out
+	./$<
 
-ex3.out: ex3.c
-	$(CC) $(CFLAGS) $< -o $@
+ex2: ex2.out
+	./$<
+
+ex3: ex3.out
+	./$<
+
+ex4: ex4.out
+	./$< .
+
+ex5: ex5.out
+	./$<
