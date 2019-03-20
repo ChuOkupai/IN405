@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O3 -Wall -Werror -Wextra
+CFLAGS=-Wall -Werror -Wextra
 
 clean:
 	rm -f *.out
@@ -20,4 +20,10 @@ ex4: ex4.out
 	./$< .
 
 ex5: ex5.out
+	./$<
+
+ex6_named: ex6_named.out
+	./$<
+
+ex6_unnamed: ex6_unnamed.out
 	./$<
