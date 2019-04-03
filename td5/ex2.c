@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define exit_error(ERROR_DESC) {fprintf(stderr, "error: %s\n", ERROR_DESC);exit(EXIT_FAILURE);}
+
 // Enumération des différents opérateurs possibles
 typedef enum {
 	OCD_SOMME,
@@ -21,10 +23,10 @@ typedef struct {
 
 // Structure contenant les informations nécessaires au thread
 typedef struct {
-							//< Tableau d'entiers à traiter
-							//< Indice de début de traitement
-							//< Indice de fin de traitement (non compris)
-							//< Résultat local
+	int *tab;				//< Tableau d'entiers à traiter
+	int start;				//< Indice de début de traitement
+	int end;				//< Indice de fin de traitement (non compris)
+	int res;				//< Résultat local
 } message_t;
 
 // Alias de pointeurs de fonction
@@ -146,7 +148,32 @@ int verifMin (int * tableau, int tailleTableau, int resultat) {
 // \param	argc			Nombre d'arguments
 // \param	argv			Arguments
 // \return					Structure de données des arguments
-arg_t analyseArguments (int argc, char ** argv) {  }
+arg_t analyseArguments (int argc, char ** argv)
+{
+	if (argc != 4)
+		exit_error("forbidden number of arguments");
+	arg_t a;
+	
+	a.nbThreads = atoi(argv[1]);
+	if (a.nbThreads < 2 || a.nbThreads > 16)
+		exit_error("nbThreads limit");
+	a.tailleTableau = atoi(argv[2]);
+	if (a.tailleTableau < 2 || a.tailleTableau > 50000)
+		exit_error("tailleTableau limit");
+	if (a.nbThreads > a.tailleTableau)
+		exit_error("too many threads set for table");
+	if (argv[3][0] == '+')
+		a.code = OCD_SOMME;
+	else if (argv[3][0] == '/')
+		a.code = OCD_MOYENNE;
+	else if (argv[3][0] == 'M')
+		a.code = OCD_MAX;
+	else if (argv[3][0] == 'm')
+		a.code = OCD_MIN;
+	else
+		exit_error("unknown op code");
+	return a;
+}
 
 // NE PAS TOUCHER
 // Récupération de la fonction de vérification à partir de l'opcode
@@ -167,7 +194,15 @@ ptrVerif decodeOpcodeVerif (const opcode_t o) {
 // Génération du tableau avec des entiers compris entre 1 et 100.
 // \param	tailleTableau	Taille du tableau d'entiers
 // \return					Tableau d'entiers
-int * genereTableau (int tailleTableau) {  }
+int * genereTableau (int tailleTableau)
+{
+	int *t = (int*)malloc(sizeof(int) * tailleTableau);
+	if (! t)
+		exit_error("cannot allocate memory");
+	while (--tailleTableau >= 0)
+		t[tailleTableau] = rand() % 100 + 1;
+	return t;
+}
 
 // Fonction chargée de la réduction multi-threadé, elle va initialiser les
 // différentes variables utilisées par les threads (tableau d'entier, messages,
@@ -176,12 +211,29 @@ int * genereTableau (int tailleTableau) {  }
 // \param	arg 			Arguments du programme décodés
 void programmePrincipal (const arg_t arg) {
 	// Déclaration des variables
-	int * tab, res;
+	int *tab, res, i, size;
+	pthread_t *thread;
+	message_t *message;
+	ptrVerif f;
 
 	// Allocation de la mémoire
-
+	thread = (pthread_t*)malloc(sizeof(pthread_t) * arg.nbThreads);
+	message = (message_t*)malloc(sizeof(message_t) * arg.nbThreads);
+	if (! (thread && message))
+		exit_error("cannot allocate memory");
+	
 	// Initialisation des variables et création des threads
-
+	tab = genereTableau(arg.tailleTableau);
+	f = decodeOpcodeVerif(arg.code);
+	size = arg.tailleTableau / arg.nbThreads;
+	for (i = 0; i < arg.nbThreads; i++)
+	{
+		message[i].tab = tab;
+		message[i].start = (i) ? message[i - 1].end : 0;
+		message[i].end = message[i].start + size;
+		pthread_create(&thread[i], NULL, );
+	}
+	
 	// Jointure
 
 	// Réduction et affichage du résultat
@@ -193,6 +245,8 @@ void programmePrincipal (const arg_t arg) {
 	// FIN
 
 	// Libération de la mémoire
+	free(tab);
+	free(thread);
 }
 
 // NE PAS TOUCHER

@@ -10,3 +10,6 @@ ex%.out: ex%.c
 
 ex1: ex1.out
 	./$< 42
+
+ex2: ex2.out
+	./$< 2 100 +
